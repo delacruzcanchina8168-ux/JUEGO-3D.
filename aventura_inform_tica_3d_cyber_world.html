@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>CyberQuest 3D: Aventura de Informática</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Fredoka+One&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
+    <!-- Three.js Engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        game: ['"Fredoka One"', 'cursive'],
+                        tech: ['Orbitron', 'sans-serif']
+                    },
+                    colors: {
+                        cyber: {
+                            pink: '#ff66c4',
+                            hotpink: '#ec4899',
+                            darkpink: '#831843',
+                            bg: '#180415',
+                            accent: '#38bdf8',
+                            gold: '#fbbf24'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        body {
+            background-color: #0d010d;
+            color: #fce7f3;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+        .font-game { font-family: 'Fredoka One', cursive; }
+        .font-tech { font-family: 'Orbitron', sans-serif; }
+
+        /* Custom Pink Glassmorphism */
+        .pink-glass {
+            background: rgba(43, 6, 38, 0.88);
+            backdrop-filter: blur(14px);
+            border: 2px solid rgba(244, 114, 182, 0.35);
+            box-shadow: 0 0 25px rgba(236, 72, 153, 0.25);
+        }
+
+        .btn-pink {
+            background: linear-gradient(135deg, #f43f5e 0%, #ec4899 50%, #d946ef 100%);
+            box-shadow: 0 6px 20px rgba(236, 72, 153, 0.4);
+            transition: all 0.15s ease-in-out;
+        }
+        .btn-pink:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(236, 72, 153, 0.6);
+        }
+        .btn-pink:active {
+            transform: scale(0.95);
+        }
+
+        .touch-btn {
+            background: rgba(236, 72, 153, 0.25);
+            border: 2px solid rgba(244, 114, 182, 0.6);
+            backdrop-filter: blur(8px);
+        }
+        .touch-btn:active {
+            background: rgba(236, 72, 153, 0.7);
+            border-color: #f472b6;
+        }
+
+        /* Screen brightness filter layer */
+        #brightness-overlay {
+            pointer-events: none;
+            transition: background-color 0.1s ease;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen relative overflow-hidden">
+
+    <!-- Screen Brightness Adjustment Overlay -->
+    <div id="brightness-overlay" class="absolute inset-0 z-50 bg-black/0"></div>
+
+    <!-- 3D CANVAS CONTAINER -->
+    <div id="canvas-container" class="absolute inset-0 w-full h-full z-0"></div>
+
+    <!-- ========================================================================= -->
+    <!-- MAIN MENU SCREEN -->
+    <!-- ========================================================================= -->
+    <div id="start-screen" class="absolute inset-0 z-40 bg-pink-950/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="pink-glass rounded-3xl p-6 sm:p-8 max-w-lg w-full text-center space-y-5 relative overflow-hidden">
+            <!-- Neon background glows -->
+            <div class="absolute -top-16 -left-16 w-36 h-36 bg-pink-500/30 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-16 -right-16 w-36 h-36 bg-fuchsia-500/30 rounded-full blur-3xl"></div>
+
+            <div class="space-y-2">
+                <div class="inline-flex items-center space-x-2 bg-pink-900/60 border border-pink-400/40 text-pink-300 px-3 py-1 rounded-full text-xs font-semibold">
+                    <i class="fa-solid fa-microchip animate-pulse"></i>
+                    <span>EDICIÓN INFORMÁTICA 3D</span>
+                </div>
+                <h1 class="text-3xl sm:text-4xl font-game text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-rose-300 to-fuchsia-400 tracking-wide drop-shadow-md">
+                    CYBER QUEST 3D
+                </h1>
+                <p class="text-xs text-pink-200">
+                    ¡Aprende informática, salta obstáculos, derrota virus y supera las 20 rondas respondiendo preguntas!
+                </p>
+            </div>
+
+            <!-- MAIN MENU BUTTONS -->
+            <div class="space-y-3 pt-2">
+                <!-- 1. Start Adventure -->
+                <button onclick="openDifficultyModal()" class="btn-pink w-full py-4 text-white font-game text-lg rounded-2xl flex items-center justify-center space-x-3 cursor-pointer">
+                    <i class="fa-solid fa-play text-xl"></i>
+                    <span>¡EMPEZAR AVENTURA!</span>
+                </button>
+
+                <!-- 2. Select Character -->
+                <button onclick="openCharSelectModal()" class="w-full py-3 bg-pink-900/60 hover:bg-pink-800/60 border border-pink-400/40 text-pink-100 font-game text-base rounded-2xl flex items-center justify-center space-x-2 transition">
+                    <i class="fa-solid fa-user-astronaut text-pink-300"></i>
+                    <span>SELECCIONAR PERSONAJE</span>
+                </button>
+
+                <!-- 3. Settings -->
+                <button onclick="openSettingsModal()" class="w-full py-3 bg-pink-950/80 hover:bg-pink-900/80 border border-pink-500/30 text-pink-200 font-game text-sm rounded-2xl flex items-center justify-center space-x-2 transition">
+                    <i class="fa-solid fa-sliders text-pink-400"></i>
+                    <span>AJUSTES</span>
+                </button>
+            </div>
+
+            <!-- Mini guide footer -->
+            <div class="text-[11px] text-pink-300/80 pt-2 flex justify-between items-center px-2">
+                <span><i class="fa-solid fa-keyboard mr-1"></i>WASD / Flechas: Mover</span>
+                <span><i class="fa-solid fa-space-bar mr-1"></i>Espacio: Saltar</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- DIFFICULTY SELECT MODAL WITH PADLOCKS (Candados) -->
+    <!-- ========================================================================= -->
+    <div id="difficulty-modal" class="absolute inset-0 z-40 bg-pink-950/85 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="pink-glass rounded-3xl p-6 max-w-md w-full text-center space-y-5">
+            <h2 class="text-2xl font-game text-pink-300">SELECCIONA LA DIFICULTAD</h2>
+            <p class="text-xs text-pink-200">Completa cada nivel para desbloquear los siguientes candados.</p>
+
+            <div class="space-y-3" id="difficulty-list-container">
+                <!-- Dynamic unlock items with padlocks rendered via JS -->
+            </div>
+
+            <button onclick="closeModal('difficulty-modal')" class="text-xs text-pink-300 underline font-semibold cursor-pointer">Volver al Menú</button>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- CHARACTER SELECT MODAL -->
+    <!-- ========================================================================= -->
+    <div id="char-modal" class="absolute inset-0 z-40 bg-pink-950/85 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="pink-glass rounded-3xl p-6 max-w-md w-full text-center space-y-5">
+            <h2 class="text-2xl font-game text-pink-300">SELECCIONAR PERSONAJE</h2>
+            <p class="text-xs text-pink-200">Elige tu avatar cibernético preferido:</p>
+
+            <div class="grid grid-cols-3 gap-3">
+                <div onclick="chooseCharacter(0)" id="char-btn-0" class="p-3 bg-pink-900/80 border-2 border-pink-400 rounded-2xl cursor-pointer hover:scale-105 transition flex flex-col items-center">
+                    <div class="w-12 h-12 bg-pink-500 rounded-full flex items-center justify-center text-white text-2xl mb-2">
+                        <i class="fa-solid fa-user-ninja"></i>
+                    </div>
+                    <span class="text-xs font-game text-pink-200">Cyber Hacker</span>
+                </div>
+
+                <div onclick="chooseCharacter(1)" id="char-btn-1" class="p-3 bg-pink-950/50 border border-pink-500/30 rounded-2xl cursor-pointer hover:scale-105 transition flex flex-col items-center">
+                    <div class="w-12 h-12 bg-fuchsia-500 rounded-full flex items-center justify-center text-white text-2xl mb-2">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <span class="text-xs font-game text-pink-200">Bot Pinky</span>
+                </div>
+
+                <div onclick="chooseCharacter(2)" id="char-btn-2" class="p-3 bg-pink-950/50 border border-pink-500/30 rounded-2xl cursor-pointer hover:scale-105 transition flex flex-col items-center">
+                    <div class="w-12 h-12 bg-rose-500 rounded-full flex items-center justify-center text-white text-2xl mb-2">
+                        <i class="fa-solid fa-cat"></i>
+                    </div>
+                    <span class="text-xs font-game text-pink-200">Gato Bit</span>
+                </div>
+            </div>
+
+            <button onclick="closeModal('char-modal')" class="btn-pink w-full py-3 text-white font-game rounded-xl text-sm">GUARDAR PERSONAJE</button>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- SETTINGS MODAL -->
+    <!-- ========================================================================= -->
+    <div id="settings-modal" class="absolute inset-0 z-40 bg-pink-950/85 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="pink-glass rounded-3xl p-6 max-w-md w-full text-center space-y-6">
+            <h2 class="text-2xl font-game text-pink-300">AJUSTES DEL JUEGO</h2>
+
+            <div class="space-y-4 text-left">
+                <!-- Brightness Slider -->
+                <div>
+                    <div class="flex justify-between text-xs font-semibold text-pink-200 mb-1">
+                        <span><i class="fa-solid fa-sun mr-1"></i> Brillo de Pantalla</span>
+                        <span id="brightness-val">100%</span>
+                    </div>
+                    <input type="range" id="slider-brightness" min="40" max="120" value="100" oninput="updateBrightness(this.value)" class="w-full accent-pink-500 cursor-pointer">
+                </div>
+
+                <!-- Sound FX Toggle -->
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-semibold text-pink-200"><i class="fa-solid fa-volume-high mr-1"></i> Efectos de Sonido</span>
+                    <button onclick="toggleAudioMute()" id="btn-sound-toggle" class="px-4 py-1.5 bg-pink-600 text-white rounded-xl text-xs font-bold">ACTIVADO</button>
+                </div>
+            </div>
+
+            <button onclick="closeModal('settings-modal')" class="btn-pink w-full py-3 text-white font-game rounded-xl text-sm">CERRAR AJUSTES</button>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- IN-GAME HUD OVERLAY -->
+    <!-- ========================================================================= -->
+    <div id="game-hud" class="absolute inset-0 pointer-events-none z-20 hidden flex flex-col justify-between p-3 sm:p-5">
+        <!-- Top HUD Bar -->
+        <div class="flex justify-between items-start space-x-2">
+            <!-- Health Battery & Stage Info -->
+            <div class="pink-glass p-2.5 rounded-2xl flex items-center space-x-3 pointer-events-auto">
+                <div class="flex items-center space-x-1" id="hp-container">
+                    <i class="fa-solid fa-battery-full text-pink-400 text-lg" id="hp-1"></i>
+                    <i class="fa-solid fa-battery-full text-pink-400 text-lg" id="hp-2"></i>
+                    <i class="fa-solid fa-battery-full text-pink-400 text-lg" id="hp-3"></i>
+                </div>
+                <div class="w-px h-6 bg-pink-500/30"></div>
+                <div class="text-left">
+                    <div class="text-[10px] text-pink-300 font-bold uppercase tracking-wider" id="hud-diff-label">FÁCIL</div>
+                    <div class="text-sm font-game text-white" id="hud-round-label">RONDA 1 / 20</div>
+                </div>
+            </div>
+
+            <!-- Score / MB collected -->
+            <div class="pink-glass px-4 py-2 rounded-2xl flex items-center space-x-3">
+                <i class="fa-solid fa-database text-pink-400 text-lg animate-bounce"></i>
+                <div class="text-left">
+                    <span class="text-[9px] text-pink-300 font-bold block">DATOS REUNIDOS</span>
+                    <span id="hud-score" class="text-base font-tech text-pink-200">0 MB</span>
+                </div>
+            </div>
+
+            <!-- EXIT GAME BUTTON -->
+            <button onclick="exitGameToMenu()" class="pointer-events-auto px-3.5 py-2 bg-rose-600/90 hover:bg-rose-500 border border-rose-300/40 text-white font-game text-xs rounded-2xl shadow-lg flex items-center space-x-2 transition cursor-pointer">
+                <i class="fa-solid fa-door-open text-sm"></i>
+                <span class="hidden sm:inline">SALIR DE LA PARTIDA</span>
+            </button>
+        </div>
+
+        <!-- Quest & Rank Banner -->
+        <div class="self-center flex space-x-2 items-center">
+            <div id="quest-banner" class="pink-glass px-4 py-1.5 rounded-full text-xs font-semibold text-pink-100 flex items-center space-x-2 shadow-lg">
+                <i class="fa-solid fa-microchip text-pink-400"></i>
+                <span id="quest-text">Usa WASD / Flechas / Pantalla para moverte y Espacio para saltar.</span>
+            </div>
+            <!-- Posición en la carrera estilo multijugador -->
+            <div class="pink-glass px-3 py-1.5 rounded-full text-xs font-game text-amber-300 flex items-center space-x-1 shadow-lg border border-amber-400/40">
+                <i class="fa-solid fa-ranking-star text-amber-400"></i>
+                <span id="hud-rank">POSICIÓN: 1º / 4</span>
+            </div>
+        </div>
+
+        <!-- On-Screen Touch Controls (Mobile) -->
+        <div class="pointer-events-auto flex justify-between items-end pb-1 px-1 sm:hidden">
+            <div class="grid grid-cols-3 gap-1.5 w-32 h-32 p-1 bg-pink-950/60 rounded-3xl border border-pink-500/40 backdrop-blur">
+                <div></div>
+                <button onpointerdown="setTouchKey('w', true)" onpointerup="setTouchKey('w', false)" class="touch-btn rounded-2xl flex items-center justify-center text-pink-300 text-lg"><i class="fa-solid fa-chevron-up"></i></button>
+                <div></div>
+                <button onpointerdown="setTouchKey('a', true)" onpointerup="setTouchKey('a', false)" class="touch-btn rounded-2xl flex items-center justify-center text-pink-300 text-lg"><i class="fa-solid fa-chevron-left"></i></button>
+                <div></div>
+                <button onpointerdown="setTouchKey('d', true)" onpointerup="setTouchKey('d', false)" class="touch-btn rounded-2xl flex items-center justify-center text-pink-300 text-lg"><i class="fa-solid fa-chevron-right"></i></button>
+                <div></div>
+                <button onpointerdown="setTouchKey('s', true)" onpointerup="setTouchKey('s', false)" class="touch-btn rounded-2xl flex items-center justify-center text-pink-300 text-lg"><i class="fa-solid fa-chevron-down"></i></button>
+                <div></div>
+            </div>
+
+            <button onpointerdown="triggerJump()" class="w-16 h-16 btn-pink rounded-2xl text-white text-2xl flex items-center justify-center shadow-xl active:scale-90 transition">
+                <i class="fa-solid fa-angles-up"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- QUIZ TRIVIA MODAL -->
+    <!-- ========================================================================= -->
+    <div id="quiz-modal" class="absolute inset-0 z-50 bg-pink-950/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="pink-glass rounded-3xl p-6 max-w-lg w-full text-center space-y-5">
+            <div class="inline-flex items-center space-x-2 bg-pink-900/60 border border-pink-400/40 text-pink-300 px-3 py-1 rounded-full text-xs font-semibold">
+                <i class="fa-solid fa-triangle-exclamation text-amber-400"></i>
+                <span>¡DESAFÍO CIBERNÉTICO!</span>
+            </div>
+            <h3 id="quiz-question" class="text-lg sm:text-xl font-game text-pink-200">¿Pregunta de Informática?</h3>
+            <div id="quiz-options" class="space-y-2.5 text-left">
+                <!-- Dynamic trivia options -->
+            </div>
+            <div id="quiz-feedback" class="text-xs font-bold hidden"></div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- GAME OVER / VICTORY MODAL -->
+    <!-- ========================================================================= -->
+    <div id="end-modal" class="absolute inset-0 z-50 bg-pink-950/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="pink-glass rounded-3xl p-6 max-w-md w-full text-center space-y-5">
+            <div id="end-icon-container" class="w-20 h-20 bg-pink-500/20 border-2 border-pink-400 rounded-2xl flex items-center justify-center mx-auto text-4xl text-pink-300">
+                <i id="end-icon" class="fa-solid fa-trophy"></i>
+            </div>
+            <div>
+                <h2 id="end-title" class="text-2xl font-game text-pink-300">¡RONDA COMPLETADA!</h2>
+                <p id="end-desc" class="text-xs text-pink-200 mt-1">Has demostrado grandes conocimientos informáticos.</p>
+            </div>
+
+            <div class="bg-pink-950/70 p-4 rounded-2xl grid grid-cols-2 gap-3 text-left border border-pink-500/30 text-xs">
+                <div>
+                    <span class="text-[10px] text-pink-300 block font-semibold">RONDAS SUPERADAS</span>
+                    <span id="end-rounds-val" class="text-lg font-game text-white">1 / 20</span>
+                </div>
+                <div>
+                    <span class="text-[10px] text-pink-300 block font-semibold">DATOS RECOGIDOS</span>
+                    <span id="end-score-val" class="text-lg font-tech text-pink-300">0 MB</span>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <button onclick="nextRoundOrRestart()" id="btn-next-round" class="btn-pink w-full py-3.5 text-white font-game text-base rounded-2xl shadow-xl flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-forward"></i>
+                    <span>SIGUIENTE RONDA</span>
+                </button>
+
+                <button onclick="exitGameToMenu()" class="w-full py-2.5 bg-pink-950 hover:bg-pink-900 text-pink-300 font-game text-xs rounded-xl border border-pink-500/30">
+                    VOLVER AL MENÚ PRINCIPAL
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast-msg" class="absolute bottom-6 right-6 z-30 pink-glass text-pink-200 text-xs px-4 py-2.5 rounded-2xl shadow-2xl flex items-center space-x-2 opacity-0 pointer-events-none transition-all duration-300">
+        <i class="fa-solid fa-bolt text-pink-400"></i>
+        <span id="toast-text">¡Mensaje de juego!</span>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- JAVASCRIPT LOGIC & THREE.JS ENGINE -->
+    <!-- ========================================================================= -->
+    <script>
+        /* -------------------------------------------------------------------------- */
+        /* INFORMATICA / IT TRIVIA QUESTION DATABASE                                   */
+        /* -------------------------------------------------------------------------- */
+        const IT_QUESTIONS = {
+            EASY: [
+                { q: "¿Qué significa la sigla 'CPU'?", opts: ["Central Processing Unit", "Computer Personal User", "Control Power Unit", "Core Program Utility"], ans: 0 },
+                { q: "¿Cuál de estos es un dispositivo de ENTRADA de datos?", opts: ["Impresora", "Teclado", "Monitor", "Altavoces"], ans: 1 },
+                { q: "¿Qué tipo de memoria es volátil y temporal?", opts: ["Disco Duro", "Memoria ROM", "Memoria RAM", "Memoria Flash"], ans: 2 },
+                { q: "¿Qué software administra los recursos del computador?", opts: ["Navegador Web", "Antivirus", "Sistema Operativo", "Procesador de Texto"], ans: 2 },
+                { q: "¿Qué botón se presiona para reiniciar un equipo?", opts: ["Reset", "Escape", "Tabulador", "Shift"], ans: 0 },
+                { q: "¿Cuál es el componente que muestra la imagen en pantalla?", opts: ["Teclado", "Monitor / Pantalla", "Microprocesador", "Fuente de poder"], ans: 1 },
+                { q: "¿Qué significa 'URL' en el contexto de internet?", opts: ["Uniform Resource Locator", "User Remote Link", "Universal Resource Line", "United Reference Location"], ans: 0 },
+                { q: "¿Cuál es el componente encargado de almacenar tus archivos de forma permanente?", opts: ["Disco Duro / SSD", "Memoria RAM", "Tarjeta de Sonido", "Ventilador"], ans: 0 },
+                { q: "¿Qué conector se usa comúnmente para conectar monitores modernos?", opts: ["HDMI", "RJ45", "Jack 3.5mm", "SATA"], ans: 0 }
+            ],
+            MEDIUM: [
+                { q: "¿Qué protocolo seguro se utiliza para navegar en sitios web cifrados?", opts: ["HTTP", "FTP", "HTTPS", "SMTP"], ans: 2 },
+                { q: "¿Qué es un 'Bug' en un programa informático?", opts: ["Un virus informático", "Un error o fallo en el código", "Un componente de hardware", "Una contraseña segura"], ans: 1 },
+                { q: "¿Qué extensión suele identificar a un archivo ejecutable en Windows?", opts: [".txt", ".png", ".exe", ".mp3"], ans: 2 },
+                { q: "¿Qué función cumple un Firewall o Cortafuegos?", opts: ["Aumentar la velocidad de internet", "Bloquear accesos no autorizados", "Limpiar el teclado", "Formatear el disco duro"], ans: 1 },
+                { q: "¿Qué lenguaje se usa principalmente para estructurar páginas web?", opts: ["Python", "HTML", "C++", "Java"], ans: 1 },
+                { q: "¿Qué significa la sigla 'IP' en redes?", opts: ["Internet Protocol", "Internal Process", "Information Path", "Interactive Program"], ans: 0 },
+                { q: "¿Cuál de estos es un sistema operativo de código abierto?", opts: ["Windows 11", "macOS", "Linux", "iOS"], ans: 2 },
+                { q: "¿Qué dispositivo conecta varios ordenadores en una red local enviando datos solo al destino?", opts: ["Switch", "Hub", "Módem", "Repetidor"], ans: 0 },
+                { q: "¿Qué tipo de malware se disfraza de programa legítimo?", opts: ["Caballo de Troya (Troyano)", "Spyware", "Ransomware", "Worm"], ans: 0 }
+            ],
+            HARD: [
+                { q: "¿Cuántos bits componen una dirección IPv6?", opts: ["32 bits", "64 bits", "128 bits", "256 bits"], ans: 2 },
+                { q: "¿Qué tipo de ataque intenta saturar un servidor con tráfico masivo?", opts: ["Phishing", "DDoS (Denegación de servicio)", "SQL Injection", "Man in the Middle"], ans: 1 },
+                { q: "En programación, ¿qué es un algoritmo?", opts: ["Una serie de pasos ordenados para resolver un problema", "Un circuito físico dentro del CPU", "Un formato de imagen comprimida", "Un tipo de cable de red"], ans: 0 },
+                { q: "¿Qué base numérica utiliza sólo los dígitos 0 y 1?", opts: ["Hexadecimal", "Decimal", "Octal", "Binaria"], ans: 3 },
+                { q: "¿Qué principio de ciberseguridad busca mantener la información en secreto?", opts: ["Disponibilidad", "Confidencialidad", "Integridad", "Autenticidad"], ans: 1 },
+                { q: "¿Qué algoritmo de cifrado asimétrico es ampliamente utilizado en seguridad?", opts: ["RSA", "MD5", "ASCII", "JPEG"], ans: 0 },
+                { q: "¿Qué estructura de datos funciona bajo el principio LIFO (Last In, First Out)?", opts: ["Pila (Stack)", "Cola (Queue)", "Matriz", "Arbol Binario"], ans: 0 },
+                { q: "¿Qué capa del modelo OSI gestiona las direcciones IP y el enrutamiento?", opts: ["Capa de Red", "Capa Física", "Capa de Aplicación", "Capa de Enlace"], ans: 0 }
+            ]
+        };
+
+        /* -------------------------------------------------------------------------- */
+        /* GAME STATE VARIABLES & UNLOCK SYSTEM                                       */
+        /* -------------------------------------------------------------------------- */
+        let scene, camera, renderer;
+        let playerMesh, selectedCharIdx = 0;
+        let obstacles = [], dataBits = [], finishPortal;
+        let rivalBots = [];
+        let currentDifficulty = 'EASY'; 
+        let currentRound = 1; 
+        let collectedScoreMB = 0;
+        let playerHP = 3;
+        let gameState = 'MENU'; 
+        let currentCollidedObstacle = null;
+
+        let audioCtx = null;
+        let isMuted = false;
+
+        // Niveles desbloqueados (Con persistencia en localStorage y candados activados por defecto)
+        let unlockedLevels = {
+            EASY: true,
+            MEDIUM: localStorage.getItem('unlocked_MEDIUM') === 'true',
+            HARD: localStorage.getItem('unlocked_HARD') === 'true'
+        };
+
+        let playerPos = new THREE.Vector3(0, 1.2, 0);
+        let playerVelocity = new THREE.Vector3();
+        let isGrounded = false;
+        
+        // CONTROLES DE TECLADO Y TÁCTIL
+        const keys = { w: false, a: false, s: false, d: false, space: false };
+
+        function setTouchKey(k, state) { keys[k] = state; }
+
+        // BINDINGS TECLADO (CORREGIDO PARA PERMITIR MOVIMIENTO COMPLETO Y SALTO)
+        window.addEventListener('keydown', (e) => {
+            const k = e.key.toLowerCase();
+            if (k === 'w' || k === 'arrowup') keys.w = true;
+            if (k === 's' || k === 'arrowdown') keys.s = true;
+            if (k === 'a' || k === 'arrowleft') keys.a = true;
+            if (k === 'd' || k === 'arrowright') keys.d = true;
+            if (e.code === 'Space' || k === ' ') {
+                triggerJump();
+                e.preventDefault();
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            const k = e.key.toLowerCase();
+            if (k === 'w' || k === 'arrowup') keys.w = false;
+            if (k === 's' || k === 'arrowdown') keys.s = false;
+            if (k === 'a' || k === 'arrowleft') keys.a = false;
+            if (k === 'd' || k === 'arrowright') keys.d = false;
+        });
+
+        /* -------------------------------------------------------------------------- */
+        /* MODAL HANDLERS & DYNAMIC DIFFICULTY MENU WITH LOCKS                       */
+        /* -------------------------------------------------------------------------- */
+        function openDifficultyModal() {
+            renderDifficultyModal();
+            document.getElementById('difficulty-modal').classList.remove('hidden');
+        }
+
+        function renderDifficultyModal() {
+            const container = document.getElementById('difficulty-list-container');
+            if (!container) return;
+
+            const isMediumUnlocked = unlockedLevels.MEDIUM === true;
+            const isHardUnlocked = unlockedLevels.HARD === true;
+
+            container.innerHTML = `
+                <!-- FÁCIL (Siempre Desbloqueado) -->
+                <button onclick="selectDifficulty('EASY')" class="w-full p-4 bg-emerald-950/60 hover:bg-emerald-900/70 border border-emerald-400/50 rounded-2xl text-left flex items-center justify-between group transition cursor-pointer">
+                    <div>
+                        <div class="font-game text-emerald-300 text-lg flex items-center gap-2">
+                            <span>FÁCIL (20 Rondas)</span>
+                            <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-400/30">DESBLOQUEADO</span>
+                        </div>
+                        <div class="text-[11px] text-emerald-200/80">Hardware básico, periféricos y conceptos sencillos.</div>
+                    </div>
+                    <i class="fa-solid fa-seedling text-emerald-400 text-2xl group-hover:scale-110 transition"></i>
+                </button>
+
+                <!-- MEDIA (Candado) -->
+                <button ${isMediumUnlocked ? "onclick=\"selectDifficulty('MEDIUM')\"" : "onclick=\"showToast('🔒 ¡Supera la Ronda 20 en Fácil para desbloquear!')\""} 
+                    class="w-full p-4 ${isMediumUnlocked ? 'bg-amber-950/60 hover:bg-amber-900/70 border-amber-400/50 cursor-pointer' : 'bg-gray-900/80 border-gray-700/80 opacity-80 cursor-not-allowed'} border rounded-2xl text-left flex items-center justify-between group transition">
+                    <div>
+                        <div class="font-game ${isMediumUnlocked ? 'text-amber-300' : 'text-gray-400'} text-lg flex items-center gap-2">
+                            <span>MEDIA (20 Rondas)</span>
+                            ${!isMediumUnlocked 
+                                ? '<span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30 flex items-center gap-1"><i class="fa-solid fa-lock text-amber-400 text-xs"></i> BLOQUEADO</span>' 
+                                : '<span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-400/30">DESBLOQUEADO</span>'}
+                        </div>
+                        <div class="text-[11px] ${isMediumUnlocked ? 'text-amber-200/80' : 'text-gray-400'}">
+                            ${isMediumUnlocked ? 'Sistemas operativos, redes y software.' : '🔒 Supera la Ronda 20 en Fácil para desbloquear'}
+                        </div>
+                    </div>
+                    <i class="fa-solid ${isMediumUnlocked ? 'fa-fire text-amber-400' : 'fa-lock text-amber-500/80'} text-2xl group-hover:scale-110 transition"></i>
+                </button>
+
+                <!-- DIFÍCIL (Candado) -->
+                <button ${isHardUnlocked ? "onclick=\"selectDifficulty('HARD')\"" : "onclick=\"showToast('🔒 ¡Supera la Ronda 20 en Medio para desbloquear!')\""} 
+                    class="w-full p-4 ${isHardUnlocked ? 'bg-rose-950/60 hover:bg-rose-900/70 border-rose-400/50 cursor-pointer' : 'bg-gray-900/80 border-gray-700/80 opacity-80 cursor-not-allowed'} border rounded-2xl text-left flex items-center justify-between group transition">
+                    <div>
+                        <div class="font-game ${isHardUnlocked ? 'text-rose-300' : 'text-gray-400'} text-lg flex items-center gap-2">
+                            <span>DIFÍCIL (20 Rondas)</span>
+                            ${!isHardUnlocked 
+                                ? '<span class="text-[10px] bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded-full border border-rose-500/30 flex items-center gap-1"><i class="fa-solid fa-lock text-rose-400 text-xs"></i> BLOQUEADO</span>' 
+                                : '<span class="text-[10px] bg-rose-500/20 text-rose-300 px-2 py-0.5 rounded-full border border-rose-400/30">DESBLOQUEADO</span>'}
+                        </div>
+                        <div class="text-[11px] ${isHardUnlocked ? 'text-rose-200/80' : 'text-gray-400'}">
+                            ${isHardUnlocked ? 'Ciberseguridad, binario y algoritmos.' : '🔒 Supera la Ronda 20 en Medio para desbloquear'}
+                        </div>
+                    </div>
+                    <i class="fa-solid ${isHardUnlocked ? 'fa-skull text-rose-400' : 'fa-lock text-rose-500/80'} text-2xl group-hover:scale-110 transition"></i>
+                </button>
+            `;
+        }
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) audioCtx = new AudioContext();
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function showToast(text) {
+            const toast = document.getElementById('toast-msg');
+            const toastText = document.getElementById('toast-text');
+            if (toast && toastText) {
+                toastText.textContent = text;
+                toast.classList.remove('opacity-0', 'pointer-events-none');
+                toast.classList.add('opacity-100');
+                setTimeout(() => {
+                    toast.classList.remove('opacity-100');
+                    toast.classList.add('opacity-0', 'pointer-events-none');
+                }, 3000);
+            }
+        }
+
+        function playSynthSound(type) {
+            if (isMuted) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'jump') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(250, now);
+                osc.frequency.exponentialRampToValueAtTime(600, now + 0.15);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.15);
+                osc.start(now); osc.stop(now + 0.15);
+            } else if (type === 'correct') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.setValueAtTime(659.25, now + 0.1);
+                osc.frequency.setValueAtTime(783.99, now + 0.2);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.35);
+                osc.start(now); osc.stop(now + 0.35);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.linearRampToValueAtTime(90, now + 0.25);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.25);
+                osc.start(now); osc.stop(now + 0.25);
+            } else if (type === 'data') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.08);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0, now + 0.08);
+                osc.start(now); osc.stop(now + 0.08);
+            }
+        }
+
+        function toggleAudioMute() {
+            isMuted = !isMuted;
+            const btn = document.getElementById('btn-sound-toggle');
+            if (btn) {
+                btn.textContent = isMuted ? "DESACTIVADO" : "ACTIVADO";
+                btn.className = isMuted ? "px-4 py-1.5 bg-gray-600 text-white rounded-xl text-xs font-bold" : "px-4 py-1.5 bg-pink-600 text-white rounded-xl text-xs font-bold";
+            }
+        }
+
+        function updateBrightness(val) {
+            document.getElementById('brightness-val').textContent = val + '%';
+            const overlay = document.getElementById('brightness-overlay');
+            if (overlay) {
+                const opacity = Math.max(0, (100 - val) / 100);
+                overlay.style.backgroundColor = `rgba(0, 0, 0, ${opacity})`;
+            }
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /* COMPETITOR RIVAL BOTS (ONLINE MULTIPLAYER VIBE)                            */
+        /* -------------------------------------------------------------------------- */
+        const BOT_PROFILES = [
+            { name: "CyberNinja_99", color: 0x38bdf8, xOffset: -3 },
+            { name: "BitRider_PRO", color: 0xa855f7, xOffset: 3 },
+            { name: "HackerGirl_X", color: 0xfacc15, xOffset: -5.5 }
+        ];
+
+        function createRivalBots() {
+            rivalBots.forEach(b => scene.remove(b.mesh));
+            rivalBots = [];
+
+            BOT_PROFILES.forEach(profile => {
+                const group = new THREE.Group();
+                const bodyMat = new THREE.MeshStandardMaterial({ color: profile.color, roughness: 0.3, metalness: 0.5 });
+                const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.2, 0.7, 10), bodyMat);
+                torso.position.y = 0.5;
+                group.add(torso);
+
+                const head = new THREE.Mesh(new THREE.SphereGeometry(0.24, 12, 12), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+                head.position.y = 1.05;
+                group.add(head);
+
+                const visor = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.1, 0.12), new THREE.MeshStandardMaterial({ color: profile.color, emissive: profile.color, emissiveIntensity: 0.9 }));
+                visor.position.set(0, 1.08, 0.15);
+                group.add(visor);
+
+                group.position.set(profile.xOffset, 1.2, 0);
+                scene.add(group);
+
+                rivalBots.push({
+                    mesh: group,
+                    name: profile.name,
+                    speed: 0.12 + (Math.random() * 0.04),
+                    jumpTimer: 0,
+                    velocity: new THREE.Vector3(),
+                    isGrounded: true
+                });
+            });
+        }
+
+        function updateRivalBots() {
+            if (gameState !== 'PLAYING') return;
+
+            rivalBots.forEach(bot => {
+                const currentSpeed = bot.speed + (Math.sin(Date.now() * 0.003) * 0.02);
+                bot.mesh.position.z -= currentSpeed;
+
+                bot.jumpTimer += 0.016;
+                if (bot.jumpTimer > 3 + Math.random() * 4 && bot.isGrounded) {
+                    bot.velocity.y = 0.22;
+                    bot.isGrounded = false;
+                    bot.jumpTimer = 0;
+                }
+
+                bot.velocity.y -= 0.012;
+                bot.mesh.position.y += bot.velocity.y;
+
+                if (bot.mesh.position.y <= 1.2) {
+                    bot.mesh.position.y = 1.2;
+                    bot.velocity.y = 0;
+                    bot.isGrounded = true;
+                }
+            });
+
+            calculatePlayerRank();
+        }
+
+        function calculatePlayerRank() {
+            let rank = 1;
+            const playerZ = playerPos.z;
+
+            rivalBots.forEach(bot => {
+                if (bot.mesh.position.z < playerZ) {
+                    rank++;
+                }
+            });
+
+            const rankEl = document.getElementById('hud-rank');
+            if (rankEl) {
+                rankEl.textContent = `POSICIÓN: ${rank}º / ${rivalBots.length + 1}`;
+            }
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /* 3D SCENE & WORLD GENERATION                                               */
+        /* -------------------------------------------------------------------------- */
+        function createPlayerAvatar() {
+            if (playerMesh) scene.remove(playerMesh);
+
+            const group = new THREE.Group();
+            let bodyColor = 0xec4899; 
+            if (selectedCharIdx === 1) bodyColor = 0xd946ef; 
+            if (selectedCharIdx === 2) bodyColor = 0xf43f5e; 
+
+            const bodyMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.3, metalness: 0.4 });
+            const bodyGeo = new THREE.CylinderGeometry(0.35, 0.25, 0.8, 12);
+            const torso = new THREE.Mesh(bodyGeo, bodyMat);
+            torso.position.y = 0.55;
+            group.add(torso);
+
+            const headGeo = new THREE.SphereGeometry(0.26, 16, 16);
+            const headMat = new THREE.MeshStandardMaterial({ color: 0xfce7f3, roughness: 0.5 });
+            const head = new THREE.Mesh(headGeo, headMat);
+            head.position.y = 1.15;
+            group.add(head);
+
+            const visorMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.8 });
+            const visor = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.12, 0.15), visorMat);
+            visor.position.set(0, 1.18, 0.18);
+            group.add(visor);
+
+            playerMesh = group;
+            scene.add(playerMesh);
+        }
+
+        function buildCyberMotherboardWorld() {
+            const groundGeo = new THREE.BoxGeometry(20, 2, 120);
+            const groundMat = new THREE.MeshStandardMaterial({ color: 0x1f061c, roughness: 0.6 });
+            const ground = new THREE.Mesh(groundGeo, groundMat);
+            ground.position.set(0, -1, -50);
+            scene.add(ground);
+
+            const gridHelper = new THREE.GridHelper(120, 40, 0xec4899, 0x831843);
+            gridHelper.position.set(0, 0.01, -50);
+            scene.add(gridHelper);
+
+            const chipMat = new THREE.MeshStandardMaterial({ color: 0x3b0764, metalness: 0.8, roughness: 0.2 });
+
+            for (let i = 0; i < 8; i++) {
+                const chip = new THREE.Mesh(new THREE.BoxGeometry(3, 0.4, 3), chipMat);
+                chip.position.set(i % 2 === 0 ? -7 : 7, 0.2, -i * 14);
+                scene.add(chip);
+            }
+
+            const portalArchMat = new THREE.MeshStandardMaterial({ color: 0xec4899, emissive: 0xbe185d, emissiveIntensity: 0.6 });
+            finishPortal = new THREE.Mesh(new THREE.TorusGeometry(3, 0.3, 16, 32), portalArchMat);
+            finishPortal.position.set(0, 3, -100);
+            scene.add(finishPortal);
+        }
+
+        function populateRoundObstaclesAndData() {
+            obstacles.forEach(o => scene.remove(o.mesh));
+            dataBits.forEach(d => scene.remove(d));
+            obstacles = [];
+            dataBits = [];
+
+            const diffMultiplier = currentDifficulty === 'EASY' ? 1 : currentDifficulty === 'MEDIUM' ? 1.3 : 1.6;
+            const count = Math.floor((6 + Math.min(22, currentRound * 1.2)) * diffMultiplier);
+
+            for (let i = 0; i < count; i++) {
+                const zPos = -10 - (i * (88 / count));
+                const xPos = (Math.random() - 0.5) * 11;
+
+                const obsGroup = new THREE.Group();
+                const virusMat = new THREE.MeshStandardMaterial({ 
+                    color: currentDifficulty === 'HARD' ? 0x9333ea : 0xef4444, 
+                    emissive: currentDifficulty === 'HARD' ? 0x581c87 : 0x991b1b, 
+                    emissiveIntensity: 0.8 
+                });
+                const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(0.75, 1), virusMat);
+                mesh.position.y = 0.75;
+                obsGroup.add(mesh);
+                obsGroup.position.set(xPos, 0, zPos);
+
+                scene.add(obsGroup);
+                obstacles.push({ mesh: obsGroup, z: zPos, answered: false });
+            }
+
+            const bitGeo = new THREE.BoxGeometry(0.4, 0.4, 0.4);
+            const bitMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.9 });
+
+            for (let i = 0; i < 18; i++) {
+                const bit = new THREE.Mesh(bitGeo, bitMat);
+                bit.position.set((Math.random() - 0.5) * 11, 0.8, -6 - (i * 5));
+                scene.add(bit);
+                dataBits.push(bit);
+            }
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /* ROUND & GAME LOGIC                                                         */
+        /* -------------------------------------------------------------------------- */
+        function startRoundGame() {
+            initAudio();
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('end-modal').classList.add('hidden');
+            document.getElementById('difficulty-modal').classList.add('hidden');
+            document.getElementById('game-hud').classList.remove('hidden');
+
+            playerPos.set(0, 1.2, 0);
+            playerVelocity.set(0, 0, 0);
+            playerHP = 3;
+
+            updateHUD();
+            populateRoundObstaclesAndData();
+            createRivalBots();
+
+            gameState = 'PLAYING';
+            showToast(`¡Ronda ${currentRound} / 20 (${currentDifficulty})! Usa WASD o Flechas para moverte.`);
+        }
+
+        function openCharSelectModal() {
+            document.getElementById('char-modal').classList.remove('hidden');
+        }
+
+        function openSettingsModal() {
+            document.getElementById('settings-modal').classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function chooseCharacter(idx) {
+            selectedCharIdx = idx;
+            for (let i = 0; i < 3; i++) {
+                const btn = document.getElementById('char-btn-' + i);
+                if (btn) {
+                    btn.className = i === idx 
+                        ? "p-3 bg-pink-900/80 border-2 border-pink-400 rounded-2xl cursor-pointer flex flex-col items-center"
+                        : "p-3 bg-pink-950/50 border border-pink-500/30 rounded-2xl cursor-pointer flex flex-col items-center";
+                }
+            }
+            createPlayerAvatar();
+            showToast('Personaje actualizado correctamente.');
+        }
+
+        function selectDifficulty(diff) {
+            currentDifficulty = diff;
+            currentRound = 1;
+            closeModal('difficulty-modal');
+            startRoundGame();
+        }
+
+        function exitGameToMenu() {
+            gameState = 'MENU';
+            document.getElementById('game-hud').classList.add('hidden');
+            document.getElementById('end-modal').classList.add('hidden');
+            document.getElementById('quiz-modal').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+            showToast('Has regresado al menú principal.');
+        }
+
+        function updateHUD() {
+            document.getElementById('hud-diff-label').textContent = currentDifficulty;
+            document.getElementById('hud-round-label').textContent = `RONDA ${currentRound} / 20`;
+            document.getElementById('hud-score').textContent = `${collectedScoreMB} MB`;
+
+            for (let i = 1; i <= 3; i++) {
+                const hpIcon = document.getElementById('hp-' + i);
+                if (hpIcon) {
+                    hpIcon.className = i <= playerHP ? "fa-solid fa-battery-full text-pink-400 text-lg" : "fa-solid fa-battery-empty text-gray-600 text-lg";
+                }
+            }
+        }
+
+        function triggerJump() {
+            if (gameState !== 'PLAYING') return;
+            if (isGrounded) {
+                playerVelocity.y = 0.25;
+                isGrounded = false;
+                playSynthSound('jump');
+            }
+        }
+
+        function triggerQuizChallenge(obstacle) {
+            gameState = 'QUIZ_PAUSE';
+            currentCollidedObstacle = obstacle;
+
+            const pool = IT_QUESTIONS[currentDifficulty];
+            const qObj = pool[Math.floor(Math.random() * pool.length)];
+
+            document.getElementById('quiz-question').textContent = qObj.q;
+
+            const optsContainer = document.getElementById('quiz-options');
+            optsContainer.innerHTML = '';
+
+            qObj.opts.forEach((optText, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full p-3 bg-pink-900/70 hover:bg-pink-800/80 border border-pink-400/40 rounded-xl text-left text-pink-100 font-semibold transition cursor-pointer";
+                btn.textContent = `${String.fromCharCode(65 + idx)}) ${optText}`;
+                btn.onclick = () => checkQuizAnswer(idx, qObj.ans);
+                optsContainer.appendChild(btn);
+            });
+
+            document.getElementById('quiz-feedback').classList.add('hidden');
+            document.getElementById('quiz-modal').classList.remove('hidden');
+        }
+
+        function checkQuizAnswer(selectedIdx, correctIdx) {
+            const feedback = document.getElementById('quiz-feedback');
+            feedback.classList.remove('hidden');
+
+            if (selectedIdx === correctIdx) {
+                playSynthSound('correct');
+                feedback.textContent = "¡CORRECTO! ¡Virus destruido y +10 MB de Datos!";
+                feedback.className = "text-xs font-bold text-emerald-400";
+
+                collectedScoreMB += 10;
+                updateHUD();
+
+                if (currentCollidedObstacle) {
+                    scene.remove(currentCollidedObstacle.mesh);
+                    currentCollidedObstacle.answered = true;
+                }
+
+                setTimeout(() => {
+                    document.getElementById('quiz-modal').classList.add('hidden');
+                    gameState = 'PLAYING';
+                }, 1000);
+            } else {
+                playSynthSound('wrong');
+                feedback.textContent = "¡INCORRECTO! Has perdido 1 de Batería.";
+                feedback.className = "text-xs font-bold text-rose-400";
+
+                playerHP--;
+                updateHUD();
+
+                playerPos.z += 2.5;
+
+                setTimeout(() => {
+                    document.getElementById('quiz-modal').classList.add('hidden');
+                    if (playerHP <= 0) {
+                        endRound(false);
+                    } else {
+                        gameState = 'PLAYING';
+                    }
+                }, 1200);
+            }
+        }
+
+        function endRound(isVictory) {
+            gameState = isVictory ? 'VICTORY' : 'GAMEOVER';
+
+            const iconContainer = document.getElementById('end-icon-container');
+            const icon = document.getElementById('end-icon');
+            const title = document.getElementById('end-title');
+            const desc = document.getElementById('end-desc');
+            const btnNext = document.getElementById('btn-next-round');
+
+            document.getElementById('end-rounds-val').textContent = `${currentRound} / 20`;
+            document.getElementById('end-score-val').textContent = `${collectedScoreMB} MB`;
+
+            if (isVictory) {
+                playSynthSound('correct');
+                iconContainer.className = "w-20 h-20 bg-emerald-500/20 border-2 border-emerald-400 rounded-2xl flex items-center justify-center mx-auto text-4xl text-emerald-300";
+                icon.className = "fa-solid fa-trophy";
+                title.textContent = `¡RONDA ${currentRound} COMPLETADA!`;
+                desc.textContent = "¡Has superado los obstáculos informáticos!";
+
+                if (currentRound >= 20) {
+                    if (currentDifficulty === 'EASY' && !unlockedLevels.MEDIUM) {
+                        unlockedLevels.MEDIUM = true;
+                        localStorage.setItem('unlocked_MEDIUM', 'true');
+                        desc.textContent = "¡FELICIDADES! Has desbloqueado el NIVEL MEDIO 🔓";
+                    } else if (currentDifficulty === 'MEDIUM' && !unlockedLevels.HARD) {
+                        unlockedLevels.HARD = true;
+                        localStorage.setItem('unlocked_HARD', 'true');
+                        desc.textContent = "¡INCREÍBLE! Has desbloqueado el NIVEL DIFÍCIL 🔓";
+                    }
+                }
+
+                if (currentRound < 20) {
+                    btnNext.innerHTML = '<i class="fa-solid fa-forward mr-2"></i>SIGUIENTE RONDA';
+                } else {
+                    title.textContent = "¡NIVEL COMPLETADO!";
+                    btnNext.innerHTML = '<i class="fa-solid fa-list mr-2"></i>SELECCIONAR NIVEL';
+                }
+            } else {
+                playSynthSound('wrong');
+                iconContainer.className = "w-20 h-20 bg-rose-500/20 border-2 border-rose-400 rounded-2xl flex items-center justify-center mx-auto text-4xl text-rose-300";
+                icon.className = "fa-solid fa-skull-crossbones";
+                title.textContent = "¡SIN BATERÍA!";
+                desc.textContent = "Los virus informáticos han agotado tu sistema.";
+                btnNext.innerHTML = '<i class="fa-solid fa-rotate-right mr-2"></i>REINTENTAR RONDA';
+            }
+
+            document.getElementById('end-modal').classList.remove('hidden');
+        }
+
+        function nextRoundOrRestart() {
+            if (gameState === 'VICTORY') {
+                if (currentRound < 20) {
+                    currentRound++;
+                    startRoundGame();
+                } else {
+                    openDifficultyModal();
+                }
+            } else {
+                startRoundGame();
+            }
+        }
+
+        /* -------------------------------------------------------------------------- */
+        /* PHYSICS & RENDER LOOP                                                      */
+        /* -------------------------------------------------------------------------- */
+        function updatePhysics() {
+            if (gameState !== 'PLAYING') return;
+
+            updateRivalBots();
+
+            // LÓGICA DE MOVIMIENTO COMPLETA
+            let moveX = 0, moveZ = 0;
+            if (keys.w) moveZ -= 0.20;
+            if (keys.s) moveZ += 0.18;
+            if (keys.a) moveX -= 0.18;
+            if (keys.d) moveX += 0.18;
+
+            playerPos.x += moveX;
+            playerPos.z += moveZ;
+
+            playerPos.x = Math.max(-8.5, Math.min(8.5, playerPos.x));
+
+            playerVelocity.y -= 0.012;
+            playerPos.y += playerVelocity.y;
+
+            if (playerPos.y <= 1.2) {
+                playerPos.y = 1.2;
+                playerVelocity.y = 0;
+                isGrounded = true;
+            }
+
+            if (playerMesh) {
+                playerMesh.position.copy(playerPos);
+                if (moveX !== 0 || moveZ !== 0) {
+                    playerMesh.rotation.y = Math.atan2(moveX, moveZ);
+                }
+            }
+
+            camera.position.x += (playerPos.x - camera.position.x) * 0.1;
+            camera.position.y += (playerPos.y + 4 - camera.position.y) * 0.1;
+            camera.position.z += (playerPos.z + 8 - camera.position.z) * 0.1;
+            camera.lookAt(playerPos.x, playerPos.y + 1, playerPos.z);
+
+            obstacles.forEach(obs => {
+                if (!obs.answered) {
+                    obs.mesh.rotation.y += 0.02;
+                    const dist = playerPos.distanceTo(obs.mesh.position);
+                    if (dist < 1.4) {
+                        triggerQuizChallenge(obs);
+                    }
+                }
+            });
+
+            dataBits.forEach(bit => {
+                bit.rotation.y += 0.04;
+                const dist = playerPos.distanceTo(bit.position);
+                if (dist < 1.2) {
+                    scene.remove(bit);
+                    dataBits = dataBits.filter(d => d !== bit);
+                    collectedScoreMB += 2;
+                    playSynthSound('data');
+                    updateHUD();
+                }
+            });
+
+            if (playerPos.z <= -98) {
+                endRound(true);
+            }
+        }
+
+        function init3DScene() {
+            const container = document.getElementById('canvas-container');
+            if (!container) return;
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0d010d);
+            scene.fog = new THREE.FogExp2(0x0d010d, 0.018);
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 300);
+            camera.position.set(0, 5, 10);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            const ambientLight = new THREE.AmbientLight(0xfce7f3, 0.8);
+            scene.add(ambientLight);
+
+            const pinkLight = new THREE.PointLight(0xec4899, 2, 50);
+            pinkLight.position.set(0, 10, -20);
+            scene.add(pinkLight);
+
+            createPlayerAvatar();
+            buildCyberMotherboardWorld();
+
+            window.addEventListener('resize', onWindowResize);
+            animate();
+        }
+
+        function onWindowResize() {
+            if (!renderer || !camera) return;
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            updatePhysics();
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+
+        window.onload = function() {
+            init3DScene();
+        };
+    </script>
+</body>
+</html>
